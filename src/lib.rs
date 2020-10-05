@@ -58,22 +58,29 @@ pub struct VerificationResponse {
     error: Option<String>,
 }
 
-pub struct VerificationServer<'a> {
-    carriers: Vec<Box<dyn TelecomProvider<'a>>>,
+impl VerificationResponse {
+    pub fn to_string(&self) -> String {
+        match serde_json::to_string(self) {
+            Ok(s) => s,
+            Err(_) => "verification response serialization error".to_string(),
+        }
+    }
+}
+
+pub struct VerificationServer {
+    carriers: Vec<Box<dyn TelecomProvider>>,
     balancer: Box<dyn Balancer>,
     repo: Box<dyn VerificationRepo>,
 }
 
-impl<'a> VerificationServer<'a> {
+impl VerificationServer {
     pub fn new(
         client_mode: BalancerType,
-        carriers: Vec<Box<dyn TelecomProvider<'a>>>,
+        carriers: Vec<Box<dyn TelecomProvider>>,
         repo: Box<dyn VerificationRepo>,
-    ) -> Self {
+    ) -> VerificationServer {
         let balancer = match client_mode {
-            BalancerType::RoundRobin => {
-                Box::new(RoundRobinBalancer::new()) as Box<dyn Balancer + Send + Sync>
-            }
+            BalancerType::RoundRobin => Box::new(RoundRobinBalancer::new()),
             BalancerType::Best => unimplemented!("BestBalancer is not supported yet"),
         };
         Self {
@@ -84,10 +91,13 @@ impl<'a> VerificationServer<'a> {
     }
 
     pub fn handle_request(
-        &'a mut self,
+        &mut self,
         request: &VerificationRequest,
     ) -> Result<VerificationResponse, Error> {
-        let carrier = match self.carriers.get(self.balancer.next_idx(&self.carriers)) {
+        let carrier = match self
+            .carriers
+            .get(self.balancer.next_idx(self.carriers.len()))
+        {
             Some(c) => c,
             None => {
                 return Ok(VerificationResponse {
@@ -112,8 +122,8 @@ impl<'a> VerificationServer<'a> {
 }
 
 // used for BestBalancer and RoudRobinBalancer
-pub trait Balancer {
-    fn next_idx(&mut self, carriers: &Vec<Box<dyn TelecomProvider>>) -> usize;
+pub trait Balancer: Send + Sync {
+    fn next_idx(&mut self, carrier_len: usize) -> usize;
 }
 
 #[derive(Debug)]
@@ -130,12 +140,12 @@ impl RoundRobinBalancer {
 }
 
 impl Balancer for RoundRobinBalancer {
-    fn next_idx(&mut self, carriers: &Vec<Box<dyn TelecomProvider>>) -> usize {
+    fn next_idx(&mut self, carrier_len: usize) -> usize {
         let mut ci = self.cur_idx.write().unwrap();
         let idx = *ci;
         // let idx = ci.into();
         // rotate to next index
-        *ci = (*ci + 1) % carriers.len();
+        *ci = (*ci + 1) % carrier_len;
         idx
     }
 }

@@ -7,7 +7,7 @@ use rand::Rng;
 // For this scenario there is an assumption that a TelecomProvider handles not only the SMS/Voice
 // request to the provide but also the webhook that listens to a user's valid submission of the 6
 // digit string and verification token
-pub trait TelecomProvider<'a> {
+pub trait TelecomProvider: Send + Sync {
     fn send_sms(&self, number: &String) -> bool;
     fn send_voice(&self, number: &String) -> bool;
     fn verify(&self, number: &String) -> VerificationEntry;
@@ -34,7 +34,7 @@ impl MockTelecomProvider {
     }
 }
 
-impl<'a> TelecomProvider<'a> for MockTelecomProvider {
+impl TelecomProvider for MockTelecomProvider {
     // return a probability likelyhood of verification success,
     fn send_sms(&self, _number: &String) -> bool {
         let num = rand::thread_rng().gen_range(0, 100);
@@ -47,7 +47,10 @@ impl<'a> TelecomProvider<'a> for MockTelecomProvider {
 
     // step through the steps outlined in VerificationStep with each having an independent chance
     // of success, returning the first verification attempt that returns true
-    fn verify(&self, number: &String) -> VerificationEntry {
+    fn verify(&self, number: &String) -> VerificationEntry
+    where
+        Self: Send + Sync,
+    {
         let rng_verification_step: VerificationStep = match () {
             _ if self.send_sms(number) => VerificationStep::FirstSMS,
             _ if self.send_sms(number) => VerificationStep::SecondSMS,

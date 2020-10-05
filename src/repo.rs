@@ -1,8 +1,8 @@
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
-use std::collections::{HashMap};
+use std::collections::HashMap;
 
-pub trait VerificationRepo {
+pub trait VerificationRepo: Send + Sync {
     fn store_attempt(&mut self, entry: VerificationEntry) -> Result<(), Error>;
     fn get_provider_rank(&self) -> Vec<(String, f32)>;
 }
