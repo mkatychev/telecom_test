@@ -21,7 +21,7 @@ pub struct Command {
     #[argh(option)]
     pub balancer: BalancerType,
 
-    /// the port that the telecom verification service runs on [ default: 5000 ]
+    /// the port that the telecom verification service runs on
     #[argh(option, short = 'p', default = "String::from(\"5000\")")]
     pub port: String,
 }

@@ -24,7 +24,7 @@ fn main() -> Result<(), Error> {
         let body = telecom::unwrap_request(request);
         match serde_json::from_slice::<VerificationRequest>(&body) {
             Ok(r) => {
-                let verification_response = server.handle_request(&r);
+                // let verification_response = server.handle_request(&r);
                 let response = serde_json::to_string(&r).expect("unable to cast to string");
                 Response::text(response)
             }
