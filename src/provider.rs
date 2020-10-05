@@ -11,6 +11,7 @@ pub trait TelecomProvider: Send + Sync {
     fn send_sms(&self, number: &String) -> bool;
     fn send_voice(&self, number: &String) -> bool;
     fn verify(&self, number: &String) -> VerificationEntry;
+    fn get_name(&self) -> String;
 }
 
 pub struct MockTelecomProvider {
@@ -65,5 +66,9 @@ impl TelecomProvider for MockTelecomProvider {
             time: chrono::offset::Utc::now(),
             step: rng_verification_step,
         }
+    }
+
+    fn get_name(&self) -> String {
+        self.name.clone()
     }
 }

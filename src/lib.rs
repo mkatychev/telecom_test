@@ -36,7 +36,7 @@ impl FromStr for BalancerType {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "rr" | "round_robin" => Ok(Self::RoundRobin),
+            "rr" | "round-robin" => Ok(Self::RoundRobin),
             "b" | "best" => Ok(Self::Best),
             _ => Err(anyhow!("Invalid client_mode: {}", s)),
         }
@@ -65,6 +65,11 @@ impl VerificationResponse {
             Err(_) => "verification response serialization error".to_string(),
         }
     }
+}
+
+#[derive(Serialize, Debug, PartialEq, Clone)]
+pub struct RankResponse {
+    rank: Vec<(String, f32)>,
 }
 
 pub struct VerificationServer {
@@ -106,6 +111,7 @@ impl VerificationServer {
                 })
             }
         };
+        println!("request handled by: {}", carrier.get_name());
         let entry = carrier.verify(&request.number);
         self.repo.store_attempt(entry.clone())?;
         match entry.step {
@@ -114,9 +120,20 @@ impl VerificationServer {
                 error: Some("verification unsuccessful".to_string()),
             }),
             _ => Ok(VerificationResponse {
-                token: Some("verification_token_test".to_string()),
+                token: Some(format!(
+                    "Authorization: Bearer ey{}{}",
+                    request.number,
+                    chrono::offset::Utc::now().timestamp(),
+                )),
                 error: None,
             }),
+        }
+    }
+
+    // returns rankings of carrier validation rates
+    pub fn get_provider_rank(&self) -> RankResponse {
+        RankResponse {
+            rank: self.repo.get_provider_rank(),
         }
     }
 }
