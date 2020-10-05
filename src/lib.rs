@@ -58,13 +58,13 @@ pub struct VerificationResponse {
     error: Option<String>,
 }
 
-pub struct VerificationServer {
+pub struct VerificationServer<'a> {
     carriers: Vec<Box<dyn TelecomProvider>>,
-    balancer: Box<dyn Balancer>,
+    balancer: Box<dyn Balancer<'a>>,
     repo: Box<dyn VerificationRepo>,
 }
 
-impl VerificationServer {
+impl<'a> VerificationServer<'a> {
     fn new(
         client_mode: BalancerType,
         carriers: Vec<Box<dyn TelecomProvider>>,
@@ -84,8 +84,11 @@ impl VerificationServer {
 }
 
 // used for BestBalancer and RoudRobinBalancer
-pub trait Balancer {
-    fn next(&self, carriers: Vec<Box<dyn TelecomProvider>>) -> Option<Box<dyn TelecomProvider>>;
+pub trait Balancer<'a> {
+    fn next(
+        &self,
+        carriers: &'a Vec<Box<dyn TelecomProvider>>,
+    ) -> Option<&'a Box<dyn TelecomProvider>>;
 }
 
 #[derive(Debug)]
@@ -101,8 +104,11 @@ impl RoundRobinBalancer {
     }
 }
 
-impl Balancer for RoundRobinBalancer {
-    fn next(&self, carriers: &Vec<Box<dyn TelecomProvider>>) -> Option<Box<dyn TelecomProvider>> {
+impl<'a> Balancer<'a> for RoundRobinBalancer {
+    fn next(
+        &self,
+        carriers: &'a Vec<Box<dyn TelecomProvider>>,
+    ) -> Option<&'a Box<dyn TelecomProvider>> {
         let mut ci = self.cur_idx.write().unwrap();
         let s = carriers.get(*ci);
         // rotate to next index
