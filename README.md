@@ -30,14 +30,14 @@ fn main() -> Result<(), Error> {
 ```
 
 When defining the behaviour of a `MockTelecomProvider::new("carrier_1", sms, voice)`:
-* `sms` arg is the chance that an SMS verificaiton attempt will fail
-* `voice` arg is the chance that a text-to-speech verificaiton attempt will fail
+* `sms` arg is the chance that an SMS verification attempt will fail
+* `voice` arg is the chance that a text-to-speech verification attempt will fail
 
 
 
 
 ## Interacting with server
-* Seeding the server with 200 verificaiton attempts: `for i in $(seq 1 200); do curl -d '{"number": "555", "time": '"$(date +%s)"'}' localhost:5000; echo ""; done`
+* Seeding the server with 200 verification attempts: `for i in $(seq 1 200); do curl -d '{"number": "555", "time": '"$(date +%s)"'}' localhost:5000; echo ""; done`
 * Returning carrier performance rankings, less is better: `curl -s -X GET localhost:5000/rank`
 * Returning the most performant carrier: `curl -s -X GET localhost:5000/rank | jq '.rank[0][0]'`
 

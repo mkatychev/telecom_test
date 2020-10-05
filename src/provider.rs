@@ -16,7 +16,7 @@ pub trait TelecomProvider: Send + Sync {
 
 pub struct MockTelecomProvider {
     name: String,
-    // percentage based likelyhook of success
+    // percentage based likelyhood of success
     chance_sms: u8,
     chance_voice: u8,
 }

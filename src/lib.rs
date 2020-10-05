@@ -167,7 +167,7 @@ impl Balancer for RoundRobinBalancer {
     }
 }
 
-// unwrap_request attemps
+// unwrap_request attempts
 pub fn unwrap_request(request: &Request) -> Vec<u8> {
     let mut buffer = Vec::new();
     let mut body = match request.data() {
