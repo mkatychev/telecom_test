@@ -25,7 +25,6 @@ impl MockTelecomProvider {
         if chance_sms > 100 || chance_voice > 100 {
             return Err(anyhow!("probability must be a number between 0 and 100"));
         }
-        let mut rng = rand::thread_rng();
 
         Ok(Self {
             name: name.to_string(),
@@ -37,11 +36,11 @@ impl MockTelecomProvider {
 
 impl<'a> TelecomProvider<'a> for MockTelecomProvider {
     // return a probability likelyhood of verification success,
-    fn send_sms(&self, number: &String) -> bool {
+    fn send_sms(&self, _number: &String) -> bool {
         let num = rand::thread_rng().gen_range(0, 100);
         num <= self.chance_sms
     }
-    fn send_voice(&self, number: &String) -> bool {
+    fn send_voice(&self, _number: &String) -> bool {
         let num = rand::thread_rng().gen_range(0, 100);
         num <= self.chance_voice
     }

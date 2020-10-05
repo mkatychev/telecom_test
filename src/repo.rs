@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Error};
 use chrono::{DateTime, Utc};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 
 pub trait VerificationRepo {
     fn store_attempt(&mut self, entry: VerificationEntry) -> Result<(), Error>;

@@ -7,6 +7,7 @@ use chrono::{DateTime, Utc};
 use rouille::Request;
 use serde::{Deserialize, Serialize};
 use std::io::Read;
+use std::marker::Send;
 use std::str::FromStr;
 use std::sync::{Arc, RwLock};
 
@@ -70,7 +71,9 @@ impl<'a> VerificationServer<'a> {
         repo: Box<dyn VerificationRepo>,
     ) -> Self {
         let balancer = match client_mode {
-            BalancerType::RoundRobin => Box::new(RoundRobinBalancer::new()),
+            BalancerType::RoundRobin => {
+                Box::new(RoundRobinBalancer::new()) as Box<dyn Balancer + Send + Sync>
+            }
             BalancerType::Best => unimplemented!("BestBalancer is not supported yet"),
         };
         Self {
@@ -115,20 +118,24 @@ pub trait Balancer {
 
 #[derive(Debug)]
 pub struct RoundRobinBalancer {
-    cur_idx: usize,
+    cur_idx: Arc<RwLock<usize>>,
 }
 
 impl RoundRobinBalancer {
     pub fn new() -> RoundRobinBalancer {
-        Self { cur_idx: 0 }
+        Self {
+            cur_idx: Arc::new(RwLock::new(0)),
+        }
     }
 }
 
 impl Balancer for RoundRobinBalancer {
     fn next_idx(&mut self, carriers: &Vec<Box<dyn TelecomProvider>>) -> usize {
-        let idx = self.cur_idx;
+        let mut ci = self.cur_idx.write().unwrap();
+        let idx = *ci;
+        // let idx = ci.into();
         // rotate to next index
-        self.cur_idx = (self.cur_idx + 1) % carriers.len();
+        *ci = (*ci + 1) % carriers.len();
         idx
     }
 }
