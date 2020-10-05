@@ -7,6 +7,7 @@ pub trait VerificationRepo {
     fn get_provider_rank(&self) -> Vec<(String, f32)>;
 }
 
+#[derive(Clone)]
 pub struct VerificationEntry {
     pub carrier: String,
     pub number: String,
